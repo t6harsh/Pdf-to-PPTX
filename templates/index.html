@@ -5,37 +5,418 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PDF → PPT Converter</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .file-upload-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-upload-input {
+      position: absolute;
+      left: -9999px;
+    }
+    
+    .file-upload-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      border: 2px dashed #cbd5e0;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #f7fafc;
+    }
+    
+    .file-upload-label:hover {
+      border-color: #667eea;
+      background: #edf2f7;
+      transform: translateY(-2px);
+    }
+    
+    .file-upload-label.drag-over {
+      border-color: #667eea;
+      background: #e6f0ff;
+      transform: scale(1.02);
+    }
+    
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: #edf2f7;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.3s ease;
+    }
+    
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.35s;
+      transform-origin: 50% 50%;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
+    }
+    
+    .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid #10b981;
+    }
+    
+    .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+    
+    .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+    
+    .icon-line {
+      height: 5px;
+      background-color: #10b981;
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+    
+    .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: icon-line-tip 0.75s;
+    }
+    
+    .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: icon-line-long 0.75s;
+    }
+    
+    @keyframes icon-line-tip {
+      0% { width: 0; left: 1px; top: 19px; }
+      54% { width: 0; left: 1px; top: 19px; }
+      70% { width: 50px; left: -8px; top: 37px; }
+      84% { width: 17px; left: 21px; top: 48px; }
+      100% { width: 25px; left: 14px; top: 45px; }
+    }
+    
+    @keyframes icon-line-long {
+      0% { width: 0; right: 46px; top: 54px; }
+      65% { width: 0; right: 46px; top: 54px; }
+      84% { width: 55px; right: 0px; top: 35px; }
+      100% { width: 47px; right: 8px; top: 38px; }
+    }
+  </style>
 </head>
 
-<body class="bg-gray-50 flex flex-col items-center justify-center h-screen">
-  <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg text-center">
-    <h1 class="text-3xl font-semibold text-gray-800 mb-6">📄 PDF → PPT Converter</h1>
-    <p class="text-gray-500 mb-6">Upload your flattened PDF and get a PowerPoint instantly.</p>
+<body class="gradient-bg min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg text-center slide-in">
+    <div class="mb-6">
+      <div class="inline-block p-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mb-4">
+        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+        PDF to PowerPoint
+      </h1>
+      <p class="text-gray-600">Transform your PDF documents into editable presentations instantly</p>
+    </div>
 
+    <!-- Upload Form -->
     <form id="uploadForm" action="/convert" method="post" enctype="multipart/form-data" class="space-y-6">
-      <input type="file" name="pdf" accept=".pdf" required class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" />
-      <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
-        Convert Now
+      <div class="file-upload-wrapper">
+        <input type="file" name="pdf" id="pdfFile" accept=".pdf" required class="file-upload-input" />
+        <label for="pdfFile" id="fileLabel" class="file-upload-label">
+          <div class="text-center">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <p class="text-lg font-medium text-gray-700">Drop your PDF here</p>
+            <p class="text-sm text-gray-500 mt-1">or click to browse</p>
+            <p class="text-xs text-gray-400 mt-2">Maximum file size: 50MB</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- File Info -->
+      <div id="fileInfo" class="hidden file-info slide-in">
+        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path>
+        </svg>
+        <div class="flex-1 text-left">
+          <p id="fileName" class="text-sm font-medium text-gray-700"></p>
+          <p id="fileSize" class="text-xs text-gray-500"></p>
+        </div>
+        <button type="button" id="removeFile" class="text-red-500 hover:text-red-700">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+
+      <button type="submit" id="convertBtn" class="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg transition transform hover:scale-105 shadow-lg">
+        <span class="flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+          Convert to PowerPoint
+        </span>
       </button>
     </form>
 
-    <div id="loading" class="hidden mt-6">
-      <p class="text-gray-600 mb-2">Converting your file... please wait</p>
-      <div class="w-full bg-gray-200 rounded-full h-2.5">
-        <div class="bg-blue-600 h-2.5 rounded-full animate-pulse" style="width: 75%"></div>
+    <!-- Loading State -->
+    <div id="loading" class="hidden mt-6 slide-in">
+      <div class="flex flex-col items-center">
+        <svg class="progress-ring w-20 h-20" viewBox="0 0 120 120">
+          <circle class="text-gray-200" stroke-width="8" stroke="currentColor" fill="transparent" r="52" cx="60" cy="60"/>
+          <circle class="progress-ring-circle text-blue-600" stroke-width="8" stroke-dasharray="326.73" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="52" cx="60" cy="60"/>
+        </svg>
+        <p class="text-gray-700 font-medium mt-4">Converting your PDF...</p>
+        <p class="text-gray-500 text-sm mt-1">This may take a few moments</p>
+      </div>
+    </div>
+
+    <!-- Success State -->
+    <div id="success" class="hidden mt-6 slide-in">
+      <div class="success-checkmark">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+        </div>
+      </div>
+      <p class="text-green-600 font-semibold text-lg mt-4">Conversion Complete!</p>
+      <p class="text-gray-600 text-sm mt-2">Your file is downloading...</p>
+    </div>
+
+    <!-- Features -->
+    <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+      <div class="p-3">
+        <div class="text-2xl mb-2">⚡</div>
+        <p class="text-xs text-gray-600">Fast Conversion</p>
+      </div>
+      <div class="p-3">
+        <div class="text-2xl mb-2">🔒</div>
+        <p class="text-xs text-gray-600">Secure & Private</p>
+      </div>
+      <div class="p-3">
+        <div class="text-2xl mb-2">✨</div>
+        <p class="text-xs text-gray-600">High Quality</p>
       </div>
     </div>
   </div>
 
-  <footer class="mt-8 text-gray-500 text-sm">
+  <footer class="mt-8 text-white text-sm backdrop-blur-sm bg-white bg-opacity-20 px-6 py-3 rounded-full">
     Made with ❤️ by <strong>Harsh Pratap Singh</strong> | Powered by Flask & Python
   </footer>
 
   <script>
     const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('pdfFile');
+    const fileLabel = document.getElementById('fileLabel');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFile');
     const loading = document.getElementById('loading');
-    form.addEventListener('submit', () => {
+    const success = document.getElementById('success');
+    const convertBtn = document.getElementById('convertBtn');
+
+    // Drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      fileLabel.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      fileLabel.addEventListener(eventName, () => {
+        fileLabel.classList.add('drag-over');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      fileLabel.addEventListener(eventName, () => {
+        fileLabel.classList.remove('drag-over');
+      }, false);
+    });
+
+    fileLabel.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      fileInput.files = files;
+      handleFiles(files);
+    }, false);
+
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+      if (files.length > 0) {
+        const file = files[0];
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.remove('hidden');
+        fileLabel.querySelector('div').innerHTML = `
+          <svg class="w-16 h-16 mx-auto mb-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-lg font-medium text-green-600">File Ready!</p>
+          <p class="text-sm text-gray-500 mt-1">Click convert to start</p>
+        `;
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    removeFileBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      fileInfo.classList.add('hidden');
+      fileLabel.querySelector('div').innerHTML = `
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <p class="text-lg font-medium text-gray-700">Drop your PDF here</p>
+        <p class="text-sm text-gray-500 mt-1">or click to browse</p>
+        <p class="text-xs text-gray-400 mt-2">Maximum file size: 50MB</p>
+      `;
+    });
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      
+      // Show loading state
+      convertBtn.classList.add('hidden');
       loading.classList.remove('hidden');
+      
+      // Animate progress ring
+      const circle = document.querySelector('.progress-ring-circle');
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 1;
+        const offset = 326.73 - (progress / 100) * 326.73;
+        circle.style.strokeDashoffset = offset;
+        if (progress >= 90) clearInterval(interval);
+      }, 100);
+      
+      try {
+        const response = await fetch('/convert', {
+          method: 'POST',
+          body: formData
+        });
+        
+        clearInterval(interval);
+        circle.style.strokeDashoffset = 0;
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileInput.files[0].name.replace('.pdf', '.pptx');
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          // Show success state
+          loading.classList.add('hidden');
+          success.classList.remove('hidden');
+          
+          // Reset after 3 seconds
+          setTimeout(() => {
+            success.classList.add('hidden');
+            convertBtn.classList.remove('hidden');
+            removeFileBtn.click();
+          }, 3000);
+        } else {
+          const error = await response.json();
+          alert('Error: ' + (error.error || 'Conversion failed'));
+          loading.classList.add('hidden');
+          convertBtn.classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred during conversion');
+        loading.classList.add('hidden');
+        convertBtn.classList.remove('hidden');
+      }
     });
   </script>
 </body>
