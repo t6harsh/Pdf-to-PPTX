@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF → PPT Converter</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col items-center justify-center h-screen">
+  <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg text-center">
+    <h1 class="text-3xl font-semibold text-gray-800 mb-6">📄 PDF → PPT Converter</h1>
+    <p class="text-gray-500 mb-6">Upload your flattened PDF and get a PowerPoint instantly.</p>
+
+    <form id="uploadForm" action="/convert" method="post" enctype="multipart/form-data" class="space-y-6">
+      <input type="file" name="pdf" accept=".pdf" required class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" />
+      <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+        Convert Now
+      </button>
+    </form>
+
+    <div id="loading" class="hidden mt-6">
+      <p class="text-gray-600 mb-2">Converting your file... please wait</p>
+      <div class="w-full bg-gray-200 rounded-full h-2.5">
+        <div class="bg-blue-600 h-2.5 rounded-full animate-pulse" style="width: 75%"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-8 text-gray-500 text-sm">
+    Made with ❤️ by <strong>Harsh Pratap Singh</strong> | Powered by Flask & Python
+  </footer>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const loading = document.getElementById('loading');
+    form.addEventListener('submit', () => {
+      loading.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

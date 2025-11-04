@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# App artifacts
+temp_images/
+temp.pdf
+*.pptx
+
+# Editors/OS
+.DS_Store
+*.swp
+
+# Environment
+.env
